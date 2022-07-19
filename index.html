@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engine</title>
+
+    <style>
+        * {
+            /* size */
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* size */
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="button1">Click me?</button>
+
+    <script type="vlsf-script">
+        #Include <Global.Out>
+        #Include <Web.Events>
+        #Include <Web.Window>
+        #Include <Web.Page>
+
+        [#]
+            // define variables
+            Declare<static> <button1> = Web.Page.Query("#button1")
+            
+            // action
+            Reusable <toggleButtonText> [] = {
+                if (button1.innerText === "Click me!") {
+                    button1.innerText = "Click me?"
+                } else {
+                    button1.innerText = "Click me!"
+                }
+            }
+
+            if (button1) {
+                Web.Events.onClientEvent(button1, "click", (e) => {
+                    e.preventDefault()
+                    toggleButtonText()
+                })
+            }
+        [/]
+    </script>
+
+    <script type="module">
+        import * as compiler from './vlsf/VLSFCompile.js'
+        compiler.VLSFLoad()
+    </script>
+</body>
+
+</html>
