@@ -2,7 +2,7 @@ export default {
     // base conversion of console object
     "Global.Out": {
         "ApiType": "js.web",
-        "ConversionObject": `Global.Out = console.log;`
+        "ConversionObject": `Global.Out = console.log`
     },
 
     // base conversion of document object

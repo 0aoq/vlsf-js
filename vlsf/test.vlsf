@@ -1,4 +1,4 @@
-#Include <Web>
+#Include <Global.Out>
 
 [#]
     Declare<static> <test1> = 1
