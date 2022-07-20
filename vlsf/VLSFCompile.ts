@@ -11,17 +11,66 @@ export const VLSFCompile = async (str: string) => {
 
     // create initial compiled string
     let head = `"use strict";
-// #vlsf 0.0.1b
+// #vlsf 0.0.2b
 // #vlsf begin head
 
 let Global = { Http: {} };
-let Web = {};\n`
+let Web = {};
+
+let Types = null;
+
+const vlsfTypeConv = ${function (input: any) {
+            // @ts-ignore
+            if (Types === undefined || Types === null) { return { error: "\"Types\" is not defined. Did you forget to import Global.Types?" } };
+            if (typeof input === "string") {
+                // @ts-ignore
+                if (Types.String && typeof Types.String === "object") {
+                    // @ts-ignore
+                    for (let _function of Object.entries(Types.String)) {
+                        // @ts-ignore
+                        Types.String[_function[0]] = _function[1].bind(input)
+                    }
+
+                    // @ts-ignore
+                    return Types.String
+                }
+            } else if (typeof input === "number") {
+                // @ts-ignore
+                if (Types.Number && typeof Types.String === "object") {
+                    // @ts-ignore
+                    for (let _function of Object.entries(Types.Number)) {
+                        // @ts-ignore
+                        Types.Number[_function[0]] = _function[1].bind(input)
+                    }
+
+                    // @ts-ignore
+                    return Types.Number
+                };
+            } else if (typeof input === "object") {
+                // @ts-ignore
+                if (Types.Object && typeof Types.Object === "object") {
+                    // @ts-ignore
+                    for (let _function of Object.entries(Types.Object)) {
+                        // @ts-ignore
+                        Types.Object[_function[0]] = _function[1].bind(input)
+                    }
+
+                    // @ts-ignore
+                    return Types.Object
+                };
+            }
+
+            return {};
+        }.toString()};\n`
 
     let compiled = "// #vlsf end head\n// #vlsf begin body"
 
     // go through each line
     for (let line of lines) {
         let matchedVLSFLine = false
+
+        // add type value selector function
+        line = line.replaceAll("##", "vlsfTypeConv")
 
         // scope selectors
         if (line.match(/^\s*\[\#\]$/m)) {

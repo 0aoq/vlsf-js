@@ -31,6 +31,9 @@
         #Include <Web.Window>
         #Include <Web.Page>
 
+        #Include <Global.Types>
+        #Include <Types.String>
+
         [#]
             // define variables
             Declare<static> <button1> = Web.Page.Query("#button1")
@@ -50,6 +53,8 @@
                     toggleButtonText()
                 })
             }
+
+            Global.Out(##("Hello, world!").Between("H", ","))
         [/]
     </script>
 
