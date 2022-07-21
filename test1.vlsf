@@ -1,0 +1,3 @@
+#Include <Global.Out>
+
+Global.Out("Hello, world!")

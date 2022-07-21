@@ -14,6 +14,7 @@ export const VLSFCompile = async (str: string) => {
 // #vlsf 0.0.2b
 // #vlsf begin head
 
+(async () => {\n
 let Global = { Http: {} };
 let Web = {};
 
@@ -63,7 +64,7 @@ const vlsfTypeConv = ${function (input: any) {
             return {};
         }.toString()};\n`
 
-    let compiled = "// #vlsf end head\n// #vlsf begin body"
+    let compiled = "// #vlsf end head\n// #vlsf begin body\n"
 
     // go through each line
     for (let line of lines) {
@@ -75,7 +76,7 @@ const vlsfTypeConv = ${function (input: any) {
         // scope selectors
         if (line.match(/^\s*\[\#\]$/m)) {
             // line matches scope start block RegExp, create new JS scope
-            compiled += `\n(() => {\n`
+            compiled += `\n(async () => {\n`
             matchedVLSFLine = true
         } else if (line.match(/^\s*\[\/\]$/m)) {
             // line matches scope end block RegExp, end JS scope
@@ -148,13 +149,13 @@ const vlsfTypeConv = ${function (input: any) {
                 head += Conversions[groups.NAME].ConversionObject + `; // VLSFDefault: ${groups.NAME}, ApiType: ${Conversions[groups.NAME].ApiType}\n`
             } else {
                 // importing a hosted or local file
-                if (window) { console.log("[VLSF]: Can't import hosted modules within browser!"); continue }
-                const response = await (await (await fetch(groups.NAME)).text())
-                const text = VLSFCompile((response as any))
+                const request = await fetch(groups.NAME)
+                const response = await request.text()
+                const text = await VLSFCompile((response as any))
 
                 // @ts-ignore
                 const blob = new Blob([text], { type: 'text/javascript' })
-                head = `import * as ${groups.NAME.split("/").pop()} from "${URL.createObjectURL(blob)}"\n\n${head}`
+                compiled += `const ${groups.NAME.split("/").pop().split(".vlsf")[0]} = await import("${URL.createObjectURL(blob)}");`
             }
         }
 
@@ -162,6 +163,7 @@ const vlsfTypeConv = ${function (input: any) {
         if (matchedVLSFLine === false) compiled += `${line}\n` // doing this allows things such as JSON to function properly
     }
 
+    compiled += `})();`
     return `${head}\n${compiled}`
 }
 
@@ -173,6 +175,7 @@ export const VLSFLoad = async () => {
     const scripts = document.querySelectorAll("script[type=\"vlsf-script\"]")
 
     const runScript = async (text: string, name: string) => {
+        console.log(await VLSFCompile(text))
         const _function = new Function(await VLSFCompile(text))
 
         Object.defineProperty(_function, "name", {
