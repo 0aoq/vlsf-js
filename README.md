@@ -38,7 +38,7 @@ Reusable <function_name> [function, params] = {
 Functions are defined using the "Reusable" keyword, this keyword is then followed by the name of the function enclosed with `<` and `>`. After the name comes the parameters, these are contained within an array and are separated by a single commad each. Below is an example of creating a simple function to add two numbers.
 
 ```
-Reusable <add> [a, b] {
+Reusable<> <add> [a, b] = {
     return a + b
 }
 ```
@@ -46,7 +46,7 @@ Reusable <add> [a, b] {
 We could also add a variable inside of the function to do something else with the result.
 
 ```
-Reusable <add> [a, b] {
+Reusable<> <add> [a, b] = {
     Declare<> <result> = a + b
     return result
 }
@@ -59,6 +59,40 @@ let add = (a, b) => {
     let result = a + b
     return result
 }
+```
+
+We can also make a public function that will be exported from the file:
+
+```
+// file1.vlsf
+Declare<static> <MODULE_NAME> = "file1"
+
+Reusable<public> <add> [a, b] = {
+    Declare<> <result> = a + b
+    return result
+}
+
+// file2.vlsf
+#Include <Global.Out>
+#Include <file1.vlsf>
+
+Global.Out(file1.add(5, 10))
+```
+
+This would compile into:
+
+```js
+// file1.vlsf
+export const add = (a, b) => {
+    let result = a + b;
+    return result;
+}
+
+// file2.vlsf
+// ... Global.Out included code
+const file1 = await import("file1.vlsf");
+
+Global.Out(file1.module.add(5, 10));
 ```
 
 ### Built-in Modules

@@ -1,3 +1,7 @@
 #Include <Global.Out>
 
-Global.Out("Hello, world!")
+Declare<static> <MODULE_NAME> = "test1"
+
+Reusable<public> <add> [a, b] = {
+    return a + b
+}

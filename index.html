@@ -34,14 +34,13 @@
         #Include <Global.Types>
         #Include <Types.String>
 
-        #Include <test1.vlsf>
-
+        // EVENTS/CUSTOM PROTOTYPE TEST
         [#]
             // define variables
             Declare<static> <button1> = Web.Page.Query("#button1")
             
             // action
-            Reusable <toggleButtonText> [] = {
+            Reusable<> <toggleButtonText> [] = {
                 if (button1.innerText === "Click me!") {
                     button1.innerText = "Click me?"
                 } else {
@@ -58,6 +57,11 @@
 
             Global.Out(##("Hello, world!").Between("H", ","))
         [/]
+
+        // IMPORT MANAGER TEST
+        #Include <test1.vlsf>
+
+        Global.Out(test1.add(5, 10))
     </script>
 
     <script type="module">

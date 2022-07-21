@@ -3,38 +3,64 @@ import Conversions from './VLSFDefault.js'
 // create URLs for resources that are reused
 let vlsfGlobalUrl = ""
 
-const vlsfGlobalBlob = new Blob([`// VLSFTYPECONV
-export let Types = {};
-export const vlsfTypeConv = ${function (input: any) {
-    // @ts-ignore
-    if (Types === undefined || Types === null) { return { error: "\"Types\" is not defined. Did you forget to import Global.Types?" } };
-    if (typeof input === "string") {
-        // @ts-ignore
-        if (Types.String && typeof Types.String === "object") {
-            // @ts-ignore
-            for (let _function of Object.entries(Types.String)) Types.String[_function[0]] = _function[1].bind(input); return Types.String
-        }
-    } else if (typeof input === "number") {
-        // @ts-ignore
-        if (Types.Number && typeof Types.String === "object") {
-            // @ts-ignore
-            for (let _function of Object.entries(Types.Number)) Types.Number[_function[0]] = _function[1].bind(input); return Types.Number
-        };
-    } else if (typeof input === "object") {
-        // @ts-ignore
-        if (Types.Object && typeof Types.Object === "object") {
-            // @ts-ignore
-            for (let _function of Object.entries(Types.Object)) Types.Object[_function[0]] = _function[1].bind(input); return Types.Object
-        };
-    }
-
-    return {};
+const vlsfGlobalBlob = new Blob([`
+export const _v_sleepTimer = ${function (time: number) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve(true)
+        }, time);
+    })
 }.toString()};
 
+// VLSFTYPECONV
+export let Types = {};
+export const vlsfTypeConv = ${function (input: any) {
+        // @ts-ignore
+        if (Types === undefined || Types === null) { return { error: "\"Types\" is not defined. Did you forget to import Global.Types?" } };
+        if (typeof input === "string") {
+            // @ts-ignore
+            if (Types.String && typeof Types.String === "object") {
+                // @ts-ignore
+                for (let _function of Object.entries(Types.String)) Types.String[_function[0]] = _function[1].bind(input); return Types.String
+            }
+        } else if (typeof input === "number") {
+            // @ts-ignore
+            if (Types.Number && typeof Types.String === "object") {
+                // @ts-ignore
+                for (let _function of Object.entries(Types.Number)) Types.Number[_function[0]] = _function[1].bind(input); return Types.Number
+            };
+        } else if (typeof input === "object") {
+            // @ts-ignore
+            if (Types.Object && typeof Types.Object === "object") {
+                // @ts-ignore
+                for (let _function of Object.entries(Types.Object)) Types.Object[_function[0]] = _function[1].bind(input); return Types.Object
+            };
+        }
+
+        return {};
+    }.toString()};
+
 export const importType = ${function (type: string, value: object) {
-    // @ts-ignore
-    Types[type] = value
-}.toString()};`], { type: 'text/javascript' })
+        // @ts-ignore
+        Types[type] = value
+    }.toString()};
+    
+// VLSFGLOBALMODULES
+export let VLSFMODULELIST = {};
+
+export const postModuleFull = ${function (name: string, exports: object) {
+        // @ts-ignore
+        VLSFMODULELIST[name] = exports
+    }.toString()};
+
+export const postModuleSegment = ${function (moduleName: string, name: string, exports: object) {
+        // @ts-ignore
+        if (!VLSFMODULELIST[moduleName]) VLSFMODULELIST[moduleName] = {}
+
+        // @ts-ignore
+        VLSFMODULELIST[moduleName][name] = exports
+    }.toString()};
+`], { type: 'text/javascript' })
 
 vlsfGlobalUrl = URL.createObjectURL(vlsfGlobalBlob)
 
@@ -52,14 +78,17 @@ export const VLSFCompile = async (str: string) => {
 // #vlsf 0.0.2b
 // #vlsf begin head
 
-(async () => {\n
 let Global = { Http: {} };
 let Web = {};
 
-const VLSFGLOBAL = await import("${vlsfGlobalUrl}")
+let module = {};
+
+(async () => {\n
+const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
 \n`
 
     let compiled = "// #vlsf end head\n// #vlsf begin body\n"
+    let outAsync = "" // all code outside of the global async function (public functions/variables)
 
     // go through each line
     for (let line of lines) {
@@ -101,12 +130,17 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}")
                 // variable is a constant and CAN'T be changed
                 compiled += `${whitespace}const ${groups.NAME} = ${groups.VALUE}\n`
             } else {
-                // variable is not a constant and CAN be changed
-                compiled += `${whitespace}let ${groups.NAME} = ${groups.VALUE}\n`
+                if (groups.TYPE === "public") {
+                    // variable is not a constant and CAN be changed
+                    outAsync += `${whitespace}module.${groups.NAME} = ${groups.VALUE}\n`
+                } else {
+                    // variable is not a constant and CAN be changed
+                    compiled += `${whitespace}let ${groups.NAME} = ${groups.VALUE}\n`
+                }
             }
         }
 
-        if (line.match(/^\s*(Reusable)\s*\<(?<NAME>.*?)\>\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m)) { // Reusable <name> [args] = {
+        if (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*\<(?<NAME>.*?)\>\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m)) { // Reusable<type> <name> [args] = {
             // matched function create RegExp, create new JS function
             matchedVLSFLine = true
 
@@ -114,7 +148,27 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}")
             if (groups === undefined) continue
 
             let whitespace = input.split(/[^\s]/)[0]
-            compiled += `${whitespace}let ${groups.NAME} = (${groups.ARGS}) => {\n`
+
+            if (!groups.TYPE) {
+                if (groups.NAME.split("<")[1]) {
+                    groups.TYPE = groups.NAME.split(">")[0].trim()
+                    groups.NAME = groups.NAME.split(">")[1].trim()
+                } else {
+                    throw SyntaxError("Invalid function creation: Missing named group \"TYPE\"")
+                }
+            }
+
+            groups.NAME = groups.NAME.replaceAll(/>/g, "")
+            groups.TYPE = groups.TYPE.replaceAll(/>/g, "")
+
+            groups.NAME = groups.NAME.replaceAll(/</g, "")
+            groups.TYPE = groups.TYPE.replaceAll(/</g, "")
+
+            if (groups.TYPE === "public") {
+                compiled += `${whitespace}module.${groups.NAME} = (${groups.ARGS}) => {\n`
+            } else {
+                compiled += `${whitespace}let ${groups.NAME} = (${groups.ARGS}) => {\n`
+            }
         }
 
         if (line.match(/^\s*\}$/gm)) { // }
@@ -150,7 +204,12 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}")
 
                 // @ts-ignore
                 const blob = new Blob([text], { type: 'text/javascript' })
-                compiled += `const ${groups.NAME.split("/").pop().split(".vlsf")[0]} = await import("${URL.createObjectURL(blob)}");`
+                const importName = groups.NAME.split("/").pop().split(".vlsf")[0]
+
+                compiled += `const _${importName} = await import("${URL.createObjectURL(blob)}");`
+                compiled += `await VLSFGLOBAL._v_sleepTimer(0.02); // wait 0.02ms (so short you won't notice) for the module to load
+                if (!VLSFGLOBAL.VLSFMODULELIST["${importName}"]) { throw "Failed to import module: requested module does not exist under VLSFMODULELIST. Did you forget to add the MODULE_NAME variable to it?" }; 
+                const ${importName} = VLSFGLOBAL.VLSFMODULELIST["${importName}"];`
             }
         }
 
@@ -158,8 +217,15 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}")
         if (matchedVLSFLine === false) compiled += `${line}\n` // doing this allows things such as JSON to function properly
     }
 
-    compiled += `})();`
-    return `${head}\n${compiled}`
+    compiled += `
+    // #vlsf dynamic import manager: load all file exports
+    for (let _module of Object.entries(module)) {
+        if (!MODULE_NAME) { break } // this clearly isn't a module, if it is the user should've done "Declare<static> <MODULE_NAME> = 'name'"
+        VLSFGLOBAL.postModuleSegment(MODULE_NAME, _module[0], _module[1]);
+    }
+})();`
+
+    return `${head}\n${outAsync}\n${compiled}`
 }
 
 /**
