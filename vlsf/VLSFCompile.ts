@@ -1,5 +1,43 @@
 import Conversions from './VLSFDefault.js'
 
+// create URLs for resources that are reused
+let vlsfGlobalUrl = ""
+
+const vlsfGlobalBlob = new Blob([`// VLSFTYPECONV
+export let Types = {};
+export const vlsfTypeConv = ${function (input: any) {
+    // @ts-ignore
+    if (Types === undefined || Types === null) { return { error: "\"Types\" is not defined. Did you forget to import Global.Types?" } };
+    if (typeof input === "string") {
+        // @ts-ignore
+        if (Types.String && typeof Types.String === "object") {
+            // @ts-ignore
+            for (let _function of Object.entries(Types.String)) Types.String[_function[0]] = _function[1].bind(input); return Types.String
+        }
+    } else if (typeof input === "number") {
+        // @ts-ignore
+        if (Types.Number && typeof Types.String === "object") {
+            // @ts-ignore
+            for (let _function of Object.entries(Types.Number)) Types.Number[_function[0]] = _function[1].bind(input); return Types.Number
+        };
+    } else if (typeof input === "object") {
+        // @ts-ignore
+        if (Types.Object && typeof Types.Object === "object") {
+            // @ts-ignore
+            for (let _function of Object.entries(Types.Object)) Types.Object[_function[0]] = _function[1].bind(input); return Types.Object
+        };
+    }
+
+    return {};
+}.toString()};
+
+export const importType = ${function (type: string, value: object) {
+    // @ts-ignore
+    Types[type] = value
+}.toString()};`], { type: 'text/javascript' })
+
+vlsfGlobalUrl = URL.createObjectURL(vlsfGlobalBlob)
+
 /**
  * @function VLSFCompile
  * @description Compile a VLSF string into normal JavaScript code
@@ -18,51 +56,8 @@ export const VLSFCompile = async (str: string) => {
 let Global = { Http: {} };
 let Web = {};
 
-let Types = null;
-
-const vlsfTypeConv = ${function (input: any) {
-            // @ts-ignore
-            if (Types === undefined || Types === null) { return { error: "\"Types\" is not defined. Did you forget to import Global.Types?" } };
-            if (typeof input === "string") {
-                // @ts-ignore
-                if (Types.String && typeof Types.String === "object") {
-                    // @ts-ignore
-                    for (let _function of Object.entries(Types.String)) {
-                        // @ts-ignore
-                        Types.String[_function[0]] = _function[1].bind(input)
-                    }
-
-                    // @ts-ignore
-                    return Types.String
-                }
-            } else if (typeof input === "number") {
-                // @ts-ignore
-                if (Types.Number && typeof Types.String === "object") {
-                    // @ts-ignore
-                    for (let _function of Object.entries(Types.Number)) {
-                        // @ts-ignore
-                        Types.Number[_function[0]] = _function[1].bind(input)
-                    }
-
-                    // @ts-ignore
-                    return Types.Number
-                };
-            } else if (typeof input === "object") {
-                // @ts-ignore
-                if (Types.Object && typeof Types.Object === "object") {
-                    // @ts-ignore
-                    for (let _function of Object.entries(Types.Object)) {
-                        // @ts-ignore
-                        Types.Object[_function[0]] = _function[1].bind(input)
-                    }
-
-                    // @ts-ignore
-                    return Types.Object
-                };
-            }
-
-            return {};
-        }.toString()};\n`
+const VLSFGLOBAL = await import("${vlsfGlobalUrl}")
+\n`
 
     let compiled = "// #vlsf end head\n// #vlsf begin body\n"
 
@@ -71,7 +66,7 @@ const vlsfTypeConv = ${function (input: any) {
         let matchedVLSFLine = false
 
         // add type value selector function
-        line = line.replaceAll("##", "vlsfTypeConv")
+        line = line.replaceAll("##", "VLSFGLOBAL.vlsfTypeConv")
 
         // scope selectors
         if (line.match(/^\s*\[\#\]$/m)) {
@@ -175,7 +170,6 @@ export const VLSFLoad = async () => {
     const scripts = document.querySelectorAll("script[type=\"vlsf-script\"]")
 
     const runScript = async (text: string, name: string) => {
-        console.log(await VLSFCompile(text))
         const _function = new Function(await VLSFCompile(text))
 
         Object.defineProperty(_function, "name", {

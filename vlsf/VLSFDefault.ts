@@ -55,15 +55,13 @@ export default {
             IsOdd: ${function (number: number) {
                 return Math.abs(number % 2) == 1
             }.toString()}
-        }
-        
-        Types = {} // secondary "Types" variable for type-specific operations`
+        }`
     },
 
     // string type functions
     "Types.String": {
         "ApiType": "vl.util.types.string",
-        "ConversionObject": `Types.String = {
+        "ConversionObject": `VLSFGLOBAL.importType("String", {
             Between: ${function (start: string, end: string) {
                 // check if start[1] is valid first
                 // we don't have to check if end is valid because [0] will always return SOMETHING
@@ -73,22 +71,22 @@ export default {
             TestThis: ${function () {
                 return this
             }.toString()}
-        }`
+        })`
     },
 
     // number type functions
     "Types.Number": {
         "ApiType": "vl.util.types.number",
-        "ConversionObject": `Types.Number = {
+        "ConversionObject": `VLSFGLOBAL.importType("Number", {
             
-        }`
+        })`
     },
 
     // object type functions
     "Types.Object": {
         "ApiType": "vl.util.types.object",
-        "ConversionObject": `Types.Object = {
+        "ConversionObject": `VLSFGLOBAL.importType("Object", {
             
-        }`
+        })`
     }
 }
