@@ -140,7 +140,7 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
             }
         }
 
-        if (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m)) { // Reusable<type> <name> [args] = {
+        if (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m)) { // Reusable<type> name [args] = {
             // matched function create RegExp, create new JS function
             matchedVLSFLine = true
 
@@ -151,9 +151,9 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
 
             if (!groups.TYPE) {
                 if (groups.NAME.split("<")[1]) {
-                    groups.TYPE = groups.NAME.split(">")[0].trim()
+                    groups.TYPE = groups.NAME.split(">")[0]
                     groups.NAME = groups.NAME.split(">")[1].trim()
-                } else {
+                } else if (groups.TYPE && groups.TYPE !== "") {
                     throw SyntaxError("Invalid function creation: Missing named group \"TYPE\"")
                 }
             }
