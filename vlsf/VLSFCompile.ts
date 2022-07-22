@@ -113,7 +113,8 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
                 line.slice(-1) !== "{" &&
                 line.slice(-1) !== "}" &&
                 line.slice(-1) !== " " &&
-                line.slice(-1) !== "") line += ";" // append ";" on lines (fixes some issues), only allowed if not scope selector
+                line.slice(-1) !== "(" &&
+                line.slice(-1) !== ",") line += ";" // append ";" on lines (fixes some issues), only allowed if not scope selector
         }
 
         // variable selectors
