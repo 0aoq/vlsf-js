@@ -117,11 +117,11 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
         }
 
         // variable selectors
-        if (line.match(/^\s*(Declare)\<(?<TYPE>.*?)\>\s*\<(?<NAME>.*?)\>\s*\=\s*(?<VALUE>.*?)$/m)) { // Declare<type> <name> = <value>
+        if (line.match(/^\s*(Declare)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\=\s*(?<VALUE>.*?)$/m)) { // Declare<type> <name> = <value>
             // matched variable create RegExp, create new JS variable
             matchedVLSFLine = true
 
-            const { input, groups } = (line.match(/^\s*(Declare)\<(?<TYPE>.*?)\>\s*\<(?<NAME>.*?)\>\s*\=\s*(?<VALUE>.*?)$/m) as RegExpMatchArray)
+            const { input, groups } = (line.match(/^\s*(Declare)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\=\s*(?<VALUE>.*?)$/m) as RegExpMatchArray)
             if (groups === undefined) continue
 
             let whitespace = input.split(/[^\s]/)[0]
@@ -140,11 +140,11 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
             }
         }
 
-        if (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*\<(?<NAME>.*?)\>\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m)) { // Reusable<type> <name> [args] = {
+        if (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m)) { // Reusable<type> <name> [args] = {
             // matched function create RegExp, create new JS function
             matchedVLSFLine = true
 
-            const { input, groups } = (line.match(/^\s*(Reusable)\s*\<(?<NAME>.*?)\>\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m) as RegExpMatchArray)
+            const { input, groups } = (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m) as RegExpMatchArray)
             if (groups === undefined) continue
 
             let whitespace = input.split(/[^\s]/)[0]

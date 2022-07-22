@@ -1,7 +1,7 @@
 #Include <Global.Out>
 
-Declare<static> <MODULE_NAME> = "test1"
+Declare<static> MODULE_NAME = "test1"
 
-Reusable<public> <add> [a, b] = {
+Reusable<public> add [a, b] = {
     return a + b
 }

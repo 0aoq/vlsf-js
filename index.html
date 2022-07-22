@@ -37,10 +37,10 @@
         // EVENTS/CUSTOM PROTOTYPE TEST
         [#]
             // define variables
-            Declare<static> <button1> = Web.Page.Query("#button1")
+            Declare<static> button1 = Web.Page.Query("#button1")
             
             // action
-            Reusable<> <toggleButtonText> [] = {
+            Reusable<> toggleButtonText [] = {
                 if (button1.innerText === "Click me!") {
                     button1.innerText = "Click me?"
                 } else {

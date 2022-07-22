@@ -12,13 +12,13 @@ The primary changes to VLSF that differ from JavaScript is how variables and fun
 ### Variables
 
 ```
-Declare<static> <variable_name> = "variable_value"
+Declare<static> variable_name = "variable_value"
 ```
 
 Variables are defined by using the "Declare" keyword, this keyword is then followed by either `<static>` or just `<>`. Using `<static>` will cause the variable to be set as a `const` variable in the resulting JavaScript. Below is an example of creating a variable named "test" with the value of 1 that is **not** constant.
 
 ```
-Declare<> <test> = 1
+Declare<> test = 1
 ```
 
 That would then be compiled into the following JavaScript code:
@@ -30,7 +30,7 @@ let test = 1
 ### Functions
 
 ```
-Reusable <function_name> [function, params] = {
+Reusable<function_type> function_name [function, params] = {
     return 0
 }
 ```
@@ -38,7 +38,7 @@ Reusable <function_name> [function, params] = {
 Functions are defined using the "Reusable" keyword, this keyword is then followed by the name of the function enclosed with `<` and `>`. After the name comes the parameters, these are contained within an array and are separated by a single commad each. Below is an example of creating a simple function to add two numbers.
 
 ```
-Reusable<> <add> [a, b] = {
+Reusable<> add [a, b] = {
     return a + b
 }
 ```
@@ -46,8 +46,8 @@ Reusable<> <add> [a, b] = {
 We could also add a variable inside of the function to do something else with the result.
 
 ```
-Reusable<> <add> [a, b] = {
-    Declare<> <result> = a + b
+Reusable<> add [a, b] = {
+    Declare<> result = a + b
     return result
 }
 ```
@@ -65,10 +65,10 @@ We can also make a public function that will be exported from the file:
 
 ```
 // file1.vlsf
-Declare<static> <MODULE_NAME> = "file1"
+Declare<static> MODULE_NAME = "file1"
 
-Reusable<public> <add> [a, b] = {
-    Declare<> <result> = a + b
+Reusable<public> add [a, b] = {
+    Declare<> result = a + b
     return result
 }
 
