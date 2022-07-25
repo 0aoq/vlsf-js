@@ -1,3 +1,11 @@
+/**
+ * @file Handle VLSF base compilation
+ * @name VLSFCompile.ts
+ * @author 0aoq <hkau@oxvs.net>
+ * @license MIT
+ */
+
+import { Blob, URL, cleanUpBlobs, fetch, fetchReturn } from './BlobReplace.js'
 import Conversions from './VLSFDefault.js'
 
 // create URLs for resources that are reused
@@ -199,7 +207,7 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
                 head += Conversions[groups.NAME].ConversionObject + `; // VLSFDefault: ${groups.NAME}, ApiType: ${Conversions[groups.NAME].ApiType}\n`
             } else {
                 // importing a hosted or local file
-                const request = await fetch(groups.NAME)
+                const request = await fetch(groups.NAME) as fetchReturn
                 const response = await request.text()
                 const text = await VLSFCompile((response as any))
 
@@ -250,6 +258,7 @@ export const VLSFLoad = async () => {
     for (let script of scripts) {
         if (script.getAttribute("src")) {
             // fetch script instead
+            // @ts-ignore
             fetch((script.getAttribute("src") as string)).then(res => res.text()).then((text: string) => {
                 runScript(text, script.getAttribute("src"))
             }).catch(console.error)
@@ -259,3 +268,7 @@ export const VLSFLoad = async () => {
         script.setAttribute("vlsf-compiled", "true")
     }
 }
+
+process.on('exit', () => {
+    cleanUpBlobs()
+})

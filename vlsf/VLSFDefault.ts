@@ -1,3 +1,10 @@
+/**
+ * @file Handle VLSF default JS type replacements
+ * @name VLSFDefault.ts
+ * @author 0aoq <hkau@oxvs.net>
+ * @license MIT
+ */
+
 export default {
     // base conversion of console object
     "Global.Out": {
