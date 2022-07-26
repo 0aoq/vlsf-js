@@ -5,8 +5,13 @@
  * @license MIT
  */
 
+ import { fileURLToPath } from 'url' 
+import * as path from 'path'
+
 import { Blob, URL, cleanUpBlobs, fetch, fetchReturn } from './BlobReplace.js'
 import Conversions from './VLSFDefault.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // create URLs for resources that are reused
 let vlsfGlobalUrl = ""
@@ -122,7 +127,8 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
                 line.slice(-1) !== "}" &&
                 line.slice(-1) !== " " &&
                 line.slice(-1) !== "(" &&
-                line.slice(-1) !== ",") line += ";" // append ";" on lines (fixes some issues), only allowed if not scope selector
+                line.slice(-1) !== "," &&
+                line.slice(-1) !== "") line += ";" // append ";" on lines (fixes some issues), only allowed if not scope selector
         }
 
         // variable selectors
@@ -206,6 +212,13 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
             if (Conversions[groups.NAME]) {
                 head += Conversions[groups.NAME].ConversionObject + `; // VLSFDefault: ${groups.NAME}, ApiType: ${Conversions[groups.NAME].ApiType}\n`
             } else {
+                if (groups.NAME.startsWith("VLSF:")) {
+                    groups.NAME = groups.NAME.split("VLSF:")[1]
+                    groups.NAME = groups.NAME.replaceAll(".vlsf", "")
+                    groups.NAME = path.resolve(__dirname, "modules") + "/" + groups.NAME
+                    groups.NAME += ".vlsf"
+                }
+
                 // importing a hosted or local file
                 const request = await fetch(groups.NAME) as fetchReturn
                 const response = await request.text()
