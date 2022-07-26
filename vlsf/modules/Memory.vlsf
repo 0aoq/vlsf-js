@@ -1,0 +1,49 @@
+#Include <Global.Out>
+#Include <Global.Types>
+
+Declare<static> MODULE_NAME = "Memory"
+
+// functions
+
+//#vlsf-int:classes.Bytes,ret:ArrayBuffer
+Declare<static> bytes_p = {
+    createUint16() {
+        return new Uint16Array(this.Buffer)
+    }
+}
+
+Reusable<public> Bytes [opts] = {
+    if (!Global.Types.Exists(opts.size)) {
+        Global.Out("Failed to create byte array: Missing options.size!")
+        process.exit()
+    }
+
+    this.Buffer = new ArrayBuffer(opts.size)
+}
+
+Object.assign(module.Bytes.prototype, bytes_p)
+
+//#vlsf-int:classes.StringBytearray,ret:ArrayBuffer
+Declare<static> s_bytes_p = {
+    toString() {
+        return String.fromCharCode.apply(null, new Uint16Array(this.Buffer))
+    }
+}
+
+Reusable<public> StringByteArray [string] = {
+    if (!Global.Types.Exists(string)) {
+        Global.Out("Failed to create byte array: Missing string parameter!")
+        process.exit()
+    }
+
+    Declare<> normalByteArray = new module.Bytes({ "size": string.length * 2 })
+    Declare<> intArray = normalByteArray.createUint16()
+
+    for (let i = 0; i < string.length; i++) {
+        intArray[i] = string.charCodeAt(i)
+    }
+
+    this.Buffer = normalByteArray.Buffer
+}
+
+Object.assign(module.StringByteArray.prototype, s_bytes_p)

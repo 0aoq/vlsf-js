@@ -180,7 +180,7 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
             groups.TYPE = groups.TYPE.replaceAll(/</g, "")
 
             if (groups.TYPE === "public") {
-                compiled += `${whitespace}module.${groups.NAME} = (${groups.ARGS}) => {\n`
+                compiled += `${whitespace}module.${groups.NAME} = function (${groups.ARGS}) {\n`
             } else {
                 compiled += `${whitespace}let ${groups.NAME} = (${groups.ARGS}) => {\n`
             }
