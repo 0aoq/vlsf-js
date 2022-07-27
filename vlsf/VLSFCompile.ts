@@ -141,17 +141,29 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
 
             let whitespace = input.split(/[^\s]/)[0]
 
-            if (groups.TYPE === "static") {
+            const types = groups.TYPE.split(" ")
+            let mods = `${whitespace}` // everything that will end up being before the variable assignment
+            let ignoreMods = false // will only be true if something that requires mods to be ignored it used
+
+            if (types.includes("static")) { // using includes instead of === allows for the possibility for type checking and assignment
                 // variable is a constant and CAN'T be changed
-                compiled += `${whitespace}const ${groups.NAME} = ${groups.VALUE}\n`
+                mods += `const `
             } else {
-                if (groups.TYPE === "public") {
+                // the "static" mod CAN'T  work with anything in here
+                if (types.includes("public")) {
                     // variable is not a constant and CAN be changed
+                    // since it is public, other mods don't apply
                     outAsync += `${whitespace}module.${groups.NAME} = ${groups.VALUE}\n`
+                    ignoreMods = true
                 } else {
                     // variable is not a constant and CAN be changed
-                    compiled += `${whitespace}let ${groups.NAME} = ${groups.VALUE}\n`
+                    // can't use let if it is public because public requires it to be set under the "module" variable
+                    mods += `let `
                 }
+            }
+
+            if (!ignoreMods) {
+                compiled += `${mods}${groups.NAME} = ${groups.VALUE}\n`
             }
         }
 
