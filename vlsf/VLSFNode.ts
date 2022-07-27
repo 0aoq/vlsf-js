@@ -1,4 +1,4 @@
-import * as compiler from './VLSFCompile'
+import * as compiler from './VLSFCompile.js'
 import * as fs from 'fs'
 
 // get first argument passed from command line

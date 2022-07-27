@@ -5,12 +5,12 @@ let vlsfGlobalUrl = ""
 
 const vlsfGlobalBlob = new Blob([`
 export const _v_sleepTimer = ${function (time: number) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve(true)
-        }, time);
-    })
-}.toString()};
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve(true)
+            }, time);
+        })
+    }.toString()};
 
 // VLSFTYPECONV
 export let Types = {};
@@ -142,33 +142,37 @@ const VLSFGLOBAL = await import("${vlsfGlobalUrl}");
         }
 
         if (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m)) { // Reusable<type> name [args] = {
-            // matched function create RegExp, create new JS function
+            // matched variable create RegExp, create new JS variable
             matchedVLSFLine = true
 
-            const { input, groups } = (line.match(/^\s*(Reusable)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\[(?<ARGS>.*?)\]\s*\=\s*\{$/m) as RegExpMatchArray)
+            const { input, groups } = (line.match(/^\s*(Declare)\<(?<TYPE>.*?)\>\s*(?<NAME>.*?)\s*\=\s*(?<VALUE>.*?)$/m) as RegExpMatchArray)
             if (groups === undefined) continue
 
             let whitespace = input.split(/[^\s]/)[0]
 
-            if (!groups.TYPE) {
-                if (groups.NAME.split("<")[1]) {
-                    groups.TYPE = groups.NAME.split(">")[0]
-                    groups.NAME = groups.NAME.split(">")[1].trim()
-                } else if (groups.TYPE && groups.TYPE !== "") {
-                    throw SyntaxError("Invalid function creation: Missing named group \"TYPE\"")
+            const types = groups.TYPE.split(" ")
+            let mods = `${whitespace}` // everything that will end up being before the variable assignment
+            let ignoreMods = false // will only be true if something that requires mods to be ignored it used
+
+            if (types.includes("static")) { // using includes instead of === allows for the possibility for type checking and assignment
+                // variable is a constant and CAN'T be changed
+                mods += `const `
+            } else {
+                // the "static" mod CAN'T  work with anything in here
+                if (types.includes("public")) {
+                    // variable is not a constant and CAN be changed
+                    // since it is public, other mods don't apply
+                    outAsync += `${whitespace}module.${groups.NAME} = ${groups.VALUE}\n`
+                    ignoreMods = true
+                } else {
+                    // variable is not a constant and CAN be changed
+                    // can't use let if it is public because public requires it to be set under the "module" variable
+                    mods += `let `
                 }
             }
 
-            groups.NAME = groups.NAME.replaceAll(/>/g, "")
-            groups.TYPE = groups.TYPE.replaceAll(/>/g, "")
-
-            groups.NAME = groups.NAME.replaceAll(/</g, "")
-            groups.TYPE = groups.TYPE.replaceAll(/</g, "")
-
-            if (groups.TYPE === "public") {
-                compiled += `${whitespace}module.${groups.NAME} = (${groups.ARGS}) => {\n`
-            } else {
-                compiled += `${whitespace}let ${groups.NAME} = (${groups.ARGS}) => {\n`
+            if (!ignoreMods) {
+                compiled += `${mods}${groups.NAME} = ${groups.VALUE}\n`
             }
         }
 
